@@ -1,0 +1,244 @@
+{
+  "name": "Template - Schengen",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Schengen Template Generator",
+        "formDescription": "Please fill up the form for Schengen Templates",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Longest Stay Country",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "France"
+                  },
+                  {
+                    "option": "Switzerland"
+                  },
+                  {
+                    "option": "Italy"
+                  },
+                  {
+                    "option": "Germany"
+                  },
+                  {
+                    "option": "Netherlands"
+                  },
+                  {
+                    "option": "Belgium"
+                  },
+                  {
+                    "option": "Austria"
+                  },
+                  {
+                    "option": "Spain"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Other Countries to visit?",
+              "placeholder": "Please use comma to separate the countries",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Entry Date:",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Exit Date:",
+              "fieldType": "date",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bb558ea0-ce15-42e8-91b7-decf5d04175b",
+      "name": "On form submission",
+      "webhookId": "49b30f37-8a57-44b2-a645-a29b5a0924dd"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a travel document assistant for SMB Travel and Tours. Your task is to generate a structured JSON output for professional Word document templates (Ticket, Hotel, and Itinerary) based on the provided trip details. ALWAYS return ONLY valid JSON that matches the schema at the end of this prompt — NO extra text.\n\n  ---\n  USER INPUTS (n8n variables)\n  - Longest Stay Country: {{ $json['Longest Stay Country'] }}\n  - Other Countries to Visit: {{ $json['Other Countries to visit?'] }}\n  - Entry Date: {{ $json['Entry Date:'] }}\n  - Exit Date: {{ $json['Exit Date:'] }}\n\n  ---\n  HIGH-LEVEL OBJECTIVES\n  1. AI must DETERMINE the best realistic overland bus route using ONLY the countries supplied by the user. Do not add, invent, or remove countries.\n  2. Flights, Hotels, and Itinerary must align:\n     - Entry flight arrival country = first country where hotels and itinerary start.\n     - Exit flight departure country = last country where hotels and itinerary end.\n     - No mismatches (e.g., flight in Germany but hotel start in France).\n  3. Entry airport must be a major international gateway in the FIRST country; exit airport must be in the LAST country.\n\n  ---\n  ITINERARY RULES (allocation and realism)\n  - Start = arrival date of entry flight.\n  - End = departure date of return flight.\n  - Each country must have at least 2 consecutive nights to make more realistic.\n  - LongestStay must be placed centrally in the route (not first or last), unless it is both entry and exit country.\n  - Last day must include a short activity + return flight.\n  - Write as a mini travel guide entry — smooth and descriptive. No bullet points, single polished paragraph describing the day\n  - Show bus durations on transfer days.\n  \n  ---\n  ROUTING RULES (deterministic)\n  - Use only user-provided countries.\n  - Place longestStay centrally if possible (not first or last).\n  - Sequence remaining countries by geographic proximity using nearest-neighbor.\n  - Avoid legs >600 km; if unavoidable, explain in daily narrative.\n\n  ---\n  FLIGHTS\n  - Airline: Etihad Airways or Emirates (same airline round trip).\n  - Layovers only in DXB (Dubai) or AUH (Abu Dhabi).\n  - Outbound: MNL → layover → entry airport.\n  - Return: exit airport → layover → MNL.\n  - Booking number: 6-char uppercase alphanumeric.\n  - If live schedule unavailable, generate plausible times and mark as “(estimated schedule — verify with airline)”.\n\n  ---\n  HOTELS\n  - One hotel per overnight city.\n  - Check-in = first night; Check-out = morning after last night.\n  - Booking number = XXX-XXXXXXX (prefix 150–899, suffix 7 digits with checksum).\n  - Hotels must include: name, full address, and valid international phone format.\n  - Prefer real hotels; otherwise use realistic placeholders.\n\n  ---\n  VALIDATION CHECKLIST\n  1. Countries list only contains user-provided countries (order deterministic).\n  2. entryAirport is in countries[0]; exitAirport is in countries[-1].\n  3. startDate = arrival date of final outbound flight segment at entryAirport.\n  4. endDate = departure date of first return flight segment from exitAirport.\n  5. totalDays = sum of nights assigned to countries; itinerary length == totalDays.\n  6. Each overnight day has exactly one hotel; hotel.checkIn/checkOut align to itinerary dates; no overlaps.\n  7. LongestStay has the most nights (or ≥4 nights when D >= reasonable threshold).\n  8. Assert: nightsAllocated[longestStay] == max(nightsAllocated.values()). If fail: regenerate allocation until this passes.\n  9. Flight booking number format and hotel booking number formats valid.\n  10. No invented countries or hidden transfers that change country list.\n  11. First itinerary entry location country == entryAirport country.\n\n  ---\n  FALLBACKS\n  - If live flight/hotel data unavailable → generate plausible info and note “(estimated schedule — verify with airline)”.\n  - If route legs exceed 600 km → minimize, explain in itinerary narrative.\n\n  ---\n  OUTPUT JSON SCHEMA\n  (Must match exactly — no extra fields, no commentary)\n\n  {\n    \"tripOverview\": {\n      \"longestStay\": \"{{ $json['Longest Stay Country'] }}\",\n      \"countries\": [\n        \"[ordered sequence produced by the deterministic route algorithm]\"\n      ],\n      \"dates\": {\n        \"entry\": \"{{ $json['Entry Date:'] }}\",\n        \"exit\": \"{{ $json['Exit Date:'] }}\"\n      },\n      \"entryAirport\": \"[AI determined entry airport in first route country]\",\n      \"exitAirport\": \"[AI determined exit airport in last route country]\",\n      \"airline\": \"[Etihad Airways or Emirates (if estimated add: (estimated schedule — verify with airline))]\"\n    },\n    \"flightTicket\": {\n      \"bookingNumber\": \"[6-character uppercase alphanumeric]\",\n      \"outbound\": [\n        {\n          \"flightNumber\": \"[Airline Code & Number]\",\n          \"from\": \"[MNL (Manila Ninoy Aquino International Airport – Terminal X)]\",\n          \"to\": \"[Layover Airport (Full Airport Name – Terminal)]\",\n          \"departure\": \"[YYYY-MM-DD HH:mm]\",\n          \"arrival\": \"[YYYY-MM-DD HH:mm]\"\n        },\n        {\n          \"flightNumber\": \"[Airline Code & Number]\",\n          \"from\": \"[Layover Airport (Full Airport Name – Terminal)]\",\n          \"to\": \"[Entry Airport (Full Airport Name – Terminal)]\",\n          \"departure\": \"[YYYY-MM-DD HH:mm]\",\n          \"arrival\": \"[YYYY-MM-DD HH:mm]\"\n        }\n      ],\n      \"return\": [\n        {\n          \"flightNumber\": \"[Airline Code & Number]\",\n          \"from\": \"[Exit Airport (Full Airport Name – Terminal)]\",\n          \"to\": \"[Layover Airport (Full Airport Name – Terminal)]\",\n          \"departure\": \"[YYYY-MM-DD HH:mm]\",\n          \"arrival\": \"[YYYY-MM-DD HH:mm]\"\n        },\n        {\n          \"flightNumber\": \"[Airline Code & Number]\",\n          \"from\": \"[Layover Airport (Full Airport Name – Terminal)]\",\n          \"to\": \"[MNL (Manila Ninoy Aquino International Airport – Terminal X)]\",\n          \"departure\": \"[YYYY-MM-DD HH:mm]\",\n          \"arrival\": \"[YYYY-MM-DD HH:mm]\"\n        }\n      ]\n    },\n    \"hotelBookings\": [\n      {\n        \"bookingNumber\": \"[XXX-XXXXXXX]\",\n        \"country\": \"[Country]\",\n        \"city\": \"[City]\",\n        \"hotel\": \"[Hotel Name]\",\n        \"address\": \"[Full Hotel Address with postal code]\",\n        \"contactNumber\": \"[Hotel Contact Number in international format]\",\n        \"checkIn\": \"[YYYY-MM-DD]\",\n        \"checkOut\": \"[YYYY-MM-DD]\"\n      }\n    ],\n    \"itinerary\": [\n      {\n        \"date\": \"[YYYY-MM-DD]\",\n        \"location\": \"[City, Country]\",\n        \"activity\": \"[Narrative paragraph with activities, local food, cultural notes, and bus transfers if any]\"\n      }\n    ]\n  }",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "90cc942c-f804-47dd-8381-b36908712456",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        192
+      ],
+      "id": "7bb6ba5f-913a-4953-8098-6158702112ff",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "SEqvOgziyma2Xhu2",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI output JSON from previous node\nconst rawOutput = $input.first().json.output;\n\n// Remove triple backticks if present and parse JSON\nconst parsedData = JSON.parse(rawOutput.replace(/```json|```/g, \"\").trim());\n\n// Extract data\nconst trip = parsedData.tripOverview;\nlet flights = parsedData.flightTicket;\nlet hotels = parsedData.hotelBookings;\nlet itinerary = parsedData.itinerary;\n\n// Sort flights by departure time\nflights.outbound = flights.outbound.sort((a, b) => new Date(a.departure) - new Date(b.departure));\nflights.return = flights.return.sort((a, b) => new Date(a.departure) - new Date(b.departure));\n\n// =====================\n// Align itinerary with flights\n// =====================\n\n// Arrival date = arrival of last outbound flight segment\nconst outboundArrival = new Date(flights.outbound[flights.outbound.length - 1].arrival);\n// Departure date = departure of first return flight segment\nconst returnDeparture = new Date(flights.return[0].departure);\n\n// Define allowed itinerary range\nconst itineraryStart = outboundArrival.toISOString().split(\"T\")[0];\nconst itineraryEnd = returnDeparture.toISOString().split(\"T\")[0];\n\n// Auto-adjust trip overview entry/exit\ntrip.dates.entry = itineraryStart;\ntrip.dates.exit = returnDeparture.toISOString().split(\"T\")[0];\n\n// Filter itinerary days\nitinerary = itinerary.filter(day => {\n  return day.date >= itineraryStart && day.date <= itineraryEnd;\n});\n\n// Adjust hotel stays to match itinerary window\nhotels = hotels.map(hotel => {\n  if (hotel.checkIn < itineraryStart) hotel.checkIn = itineraryStart;\n  if (hotel.checkOut > itineraryEnd) hotel.checkOut = itineraryEnd;\n  return hotel;\n});\n\n// Sort hotels by check-in date\nhotels = hotels.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));\n\n// === Ensure last hotel check-out = return flight departure day ===\nif (hotels.length > 0) {\n  hotels[hotels.length - 1].checkOut = returnDeparture.toISOString().split(\"T\")[0];\n}\n\n// Sort itinerary by date\nitinerary = itinerary.sort((a, b) => new Date(a.date) - new Date(b.date));\n\n// === SMART LAST DAY ADJUSTMENT ===\nif (itinerary.length > 0) {\n  const lastDay = itinerary[itinerary.length - 1];\n  const lastDayDate = new Date(lastDay.date);\n  const departureDate = returnDeparture.toISOString().split(\"T\")[0];\n  const departureHour = returnDeparture.getHours();\n\n  if (lastDayDate.toISOString().split(\"T\")[0] === departureDate) {\n    if (departureHour < 12) {\n      // Morning flight → no activities\n      lastDay.activity = `This day is reserved for check-out and transfer to the airport. Your flight departs in the morning, so no sightseeing activities are planned.`;\n    } else {\n      // Afternoon/evening flight → allow half-day activities\n      lastDay.activity = `${lastDay.activity}\\n\\nNote: Since your return flight departs at ${formatTime(returnDeparture)}, only half-day activities are recommended. Please allow sufficient time for packing, hotel check-out, and airport transfer.`;\n    }\n  }\n}\n\n// =====================\n// Format helpers\n// =====================\nfunction formatDate(dateStr) {\n  const date = new Date(dateStr);\n  if (isNaN(date)) return dateStr; // fallback if invalid\n  return date.toLocaleDateString(\"en-US\", {\n    weekday: \"short\",\n    month: \"short\",\n    day: \"numeric\",\n    year: \"numeric\"\n  });\n}\n\nfunction formatTime(dateStr) {\n  const date = new Date(dateStr);\n  if (isNaN(date)) return \"\"; // fallback if invalid\n  return date.toLocaleTimeString(\"en-US\", { hour: \"2-digit\", minute: \"2-digit\" });\n}\n\n// Day counter based on itinerary start\nfunction getDayNumber(entryDate, currentDate) {\n  const start = new Date(entryDate);\n  const current = new Date(currentDate);\n  if (isNaN(start) || isNaN(current)) return \"NaN\";\n  const diffDays = Math.floor((current - start) / (1000 * 60 * 60 * 24));\n  return diffDays + 1;\n}\n\n// =====================\n// Hotel fallback logic\n// =====================\nconst fallbackAddresses = [\n  \"123 Avenue des Champs-Élysées, 75008 Paris, France\",\n  \"Via Vittorio Emanuele II, 20121 Milan, Italy\",\n  \"Alexanderplatz 1, 10178 Berlin, Germany\"\n];\n\nconst fallbackContacts = [\n  \"+33 1 44 55 66 77\", // France\n  \"+39 06 6988 1234\",  // Italy\n  \"+49 30 123456\"      // Germany\n];\n\n// Apply booking number sequence + fallback address/contact\nlet baseBookingNumber = hotels.length > 0 ? hotels[0].bookingNumber : \"197-7493251\";\nhotels = hotels.map((h, index) => {\n  let parts = baseBookingNumber.split(\"-\");\n  let prefix = parts[0];\n  let number = parseInt(parts[1]) + index;\n\n  return {\n    ...h,\n    bookingNumber: `${prefix}-${number}`,\n    address: h.address && h.address.trim() !== \"\" \n      ? h.address \n      : fallbackAddresses[index % fallbackAddresses.length],\n    contactNumber: h.contactNumber && h.contactNumber.trim() !== \"\" \n      ? h.contactNumber \n      : fallbackContacts[index % fallbackContacts.length]\n  };\n});\n\n/* =========================\n   PAGE 1: Overview + Tickets\n   ========================= */\nlet page1 = `**Trip Overview**\n\n- Longest Stay Country: ${trip.longestStay}\n- Other Countries to Visit: ${trip.countries.join(\", \")}\n- Entry Date: ${formatDate(trip.dates.entry)}\n- Exit Date: ${formatDate(trip.dates.exit)}\n- Entry Airport: ${trip.entryAirport}\n- Exit Airport: ${trip.exitAirport}\n- Airline: ${trip.airline}\n\nFlight Tickets :\n==============================\n\n**Booking Number:** **${flights.bookingNumber}**\n\n**Outbound Flights**\n${flights.outbound.map(f =>\n  `• Flight: ${f.flightNumber} | ${f.from} → ${f.to}\n  Departure: ${formatDate(f.departure)} at ${formatTime(f.departure)}\n  Arrival: ${formatDate(f.arrival)} at ${formatTime(f.arrival)}`\n).join(\"\\n\\n\")}\n\n**Return Flights**\n${flights.return.map(f =>\n  `• Flight: ${f.flightNumber} | ${f.from} → ${f.to}\n  Departure: ${formatDate(f.departure)} at ${formatTime(f.departure)}\n  Arrival: ${formatDate(f.arrival)} at ${formatTime(f.arrival)}`\n).join(\"\\n\\n\")}\n`;\n\n/* =========================\n   PAGE 2: Hotels\n   ========================= */\nlet page2 = `\\n\\n\\n Hotel Bookings :\n==============================\n${hotels.map(h =>\n  `• ${h.hotel} - ${h.city}, ${h.country}\n  **Booking Number:** **${h.bookingNumber}**\n  Address: ${h.address}\n  Contact Number: ${h.contactNumber}\n  Check-In: ${formatDate(h.checkIn)}\n  Check-Out: ${formatDate(h.checkOut)}`\n).join(\"\\n\\n\")}\n`;\n\n/* =========================\n   PAGE 3: Itinerary\n   ========================= */\nlet page3 = `\\n\\n\\n Detailed Itinerary :\n==============================\n${itinerary.map(day =>\n  `Day ${getDayNumber(itineraryStart, day.date)} (${formatDate(day.date)}): ${day.location}\\n${day.activity}`\n).join(\"\\n\\n\")}\n`;\n\n// Use Unicode Form Feed character for page breaks\nconst pageBreak = '\\f';\nconst finalOutput = `${page1}${pageBreak}${page2}${pageBreak}${page3}`;\n\n// Output for Google Docs\nreturn [{ json: { content: finalOutput } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        0
+      ],
+      "id": "4f6f7922-88fd-44c0-939d-12ba104874b2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "folderId": "1JAA6TTyGhL3N4dmewxQYNMlsJn2MLXdt",
+        "title": "=Travel Plan - {{ $('On form submission').item.json['Longest Stay Country'] }} - {{ $('On form submission').item.json['Entry Date:'] }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        688,
+        0
+      ],
+      "id": "7f04dff5-c59c-49e3-8ea6-e1d449534b40",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "GBK5PlWh7sKgzRNj",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "simple": false,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Code').item.json.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "96ab199b-c1ff-44c6-9015-256d65c4caa5",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "GBK5PlWh7sKgzRNj",
+          "name": "Google Docs account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f15d2e5a-26f7-4f72-bc43-ad7ad87fc678",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec7e42c4f361972a8c80ab3ebd270266122f96d9ebf1a7569610656255d73898"
+  },
+  "id": "yXhWGIq9ow9gOwQO",
+  "tags": []
+}

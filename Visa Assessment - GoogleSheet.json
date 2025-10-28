@@ -1,0 +1,1492 @@
+{
+  "name": "Visa Assessment - GoogleSheet",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ",
+          "mode": "list",
+          "cachedResultName": "ASSESSMENT FORMS RESPONSES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 655435541,
+          "mode": "list",
+          "cachedResultName": "SCHENGEN",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ/edit#gid=655435541"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        0
+      ],
+      "id": "2a30cf21-b912-47d3-b3e0-a2ed0799d017",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "WsZMJmkaHpZBrLMj",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the input data from the n8n node input\nconst jsonData = items[0].json; // Assuming your data is in the first item\n\n// Extract the required fields from the JSON data\nconst extractedData = {\n  emailAddress: jsonData[\"Email Address\"], // Email Address\n  lastName: jsonData[\"Last Name\"], // Last Name\n  firstName: jsonData[\"First Name\"], // First Name\n  currentStatus: jsonData[\"Current Status\"], // Current Status\n  jobTitle: jsonData[\"Job Title/Position:\"], // Job Title/Position\n  employerName: jsonData[\"Name of Employer\"], // Name of Employer\n  employmentStartDate: jsonData[\"Employment's Start Date\"], //Employment Start Date\n  tripPaymentSource: jsonData[\"Who will pay for the trip?\"], // Who will pay for the trip?\n  monthlyIncome: jsonData[\"How much is the Applicant's Monthly Income?\"], // Monthly Income\n  bankBalance: jsonData[\"How much is the Applicant's bank balance with Savings or Current Account?\"], // Bank Balance\n  avgDailyBalance: jsonData[\"How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?\"], // Average Daily Balance\n  traveledInternationally: jsonData[\"Have you traveled internationally in the past 10 years?\"], // Have you traveled internationally?\n  traveledCountries: [\n    jsonData[\"Country 1\"],\n    jsonData[\"Country 2\"],\n    jsonData[\"Country 3\"],\n    jsonData[\"Country 4\"],\n    jsonData[\"Country 5\"],\n    jsonData[\"Country 6\"],\n    jsonData[\"Country 7\"],\n    jsonData[\"Country 8\"],\n    jsonData[\"Country 9\"],\n    jsonData[\"Country 10\"]\n  ].filter(country => country !== \"N/A\") // Filtering out 'N/A' values\n};\n\n// Return the extracted data\nreturn [\n  {\n    json: extractedData,\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -448
+      ],
+      "id": "0e8b8e3a-562e-4986-b0f7-8fd15cdf2144",
+      "name": "Extract Information"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "=",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -928,
+        -864
+      ],
+      "id": "19b51071-02d2-4835-b676-744a6dadf613",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "URL/HTML to PDF",
+        "convertType": "htmlToPDF",
+        "html": "={{ $json.html }}",
+        "advancedOptions": {
+          "name": "=Visa Questionnaire - {{ $('Google Sheet').item.json['Last Name'] }},{{ $('Google Sheet').item.json['First Name'] }}"
+        }
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -864
+      ],
+      "id": "d846cfb4-ddd0-4c28-b47a-acc63cdfa7dd",
+      "name": "PDFco Api",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "TWIAkXOPLFOyK2MN",
+          "name": "PDF.co account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1072,
+        -864
+      ],
+      "id": "ccbe647f-684d-4abf-b361-ab2ed18d9a85",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items[0].json;\nconst keys = Object.keys(data);\n\n// Build table rows with inline styles only\nlet htmlRows = keys.map((key) => {\n  const label = key.replace(/\\n/g, '<br>').replace(/\\s+/g, ' ').trim();\n  const value = data[key] !== undefined && data[key] !== null ? data[key] : '';\n  return `\n    <tr>\n      <td style=\"border:1px solid #ddd; padding:8px; vertical-align: top; font-weight: bold; width: 35%; background-color:#f9f9f9;\">\n        ${label}\n      </td>\n      <td style=\"border:1px solid #ddd; padding:8px; vertical-align: top;\">\n        ${value.toString().replace(/\\n/g, '<br>')}\n      </td>\n    </tr>\n  `;\n}).join('');\n\n// Wrap into full minimal HTML (no <head>, no <style>)\nconst html = `\n<html>\n  <body style=\"font-family: Arial, sans-serif; padding: 20px;\">\n    <h2 style=\"font-family: Arial, sans-serif; margin-bottom:16px;\">Visa Application Data</h2>\n    <table style=\"border-collapse: collapse; width: 100%;\">\n      <tbody>\n        ${htmlRows}\n      </tbody>\n    </table>\n  </body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      html\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -80
+      ],
+      "id": "f70527ae-d598-4e26-a5d7-0df2b54be64a",
+      "name": "Convert to HTML"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1216,
+        -1104
+      ],
+      "id": "ed8ac655-095b-46fc-901a-93550c66d2ee",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "name": "=Visa Questionnaire - {{ $('Google Sheet').item.json['Last Name'] }}, {{ $('Google Sheet').item.json['First Name']   }} - {{ $('Google Sheet').item.json['APPLICANT ID'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1072,
+        -1104
+      ],
+      "id": "b5309e1d-9969-4391-977e-49ba1b61f7c6",
+      "name": "Upload Document",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -928,
+        -1104
+      ],
+      "id": "324a29d7-0d56-4995-8b96-bdf2c40da4d4",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://apdf.io/api/pdf/file/create",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "Bearer HjwM2l7I94TXrvGDvG6wWVd1ShxUDd4TmIYBCGGt932f41e8"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=html",
+              "value": "={{ $json.html }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        -80
+      ],
+      "id": "7d9febbc-f88f-4c1b-9b57-3b92b0dc42b7",
+      "name": "Convert HTML to PDF"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -80
+      ],
+      "id": "10ac5744-b48e-44bf-8a2a-efc4127b72fe",
+      "name": "Download PDF"
+    },
+    {
+      "parameters": {
+        "name": "=Visa Questionnaire - {{ $('Google Sheet').item.json['Last Name'] }}, {{ $('Google Sheet').item.json['First Name'] }} - {{ $('Google Sheet').item.json['APPLICANT ID'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        -80
+      ],
+      "id": "20ebbbfe-61a4-4843-bc91-e5b0bb8d2f35",
+      "name": "Upload PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        -256
+      ],
+      "id": "b7c1fb7b-cb25-4100-94f1-0c49966d6d09",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QuFQGsPklRzSZqzF",
+          "name": "OpenAI SMB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ",
+          "mode": "list",
+          "cachedResultName": "ASSESSMENT FORMS RESPONSES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 655435541,
+          "mode": "list",
+          "cachedResultName": "SCHENGEN",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TWMNjxvqPFkmJpYvUJwMsHJFtoYE4pFqNner1dBcJyQ/edit#gid=655435541"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "APPLICANT ID": "={{ $('Google Sheet').item.json['APPLICANT ID'] }}",
+            "STATUS": "Done Assessment"
+          },
+          "matchingColumns": [
+            "APPLICANT ID"
+          ],
+          "schema": [
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "APPLICANT ID",
+              "displayName": "APPLICANT ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "We at SMB Travel and Tours are committed to protecting your personal data.\n\nYour privacy is important to us, and we ensure that all information you\nprovide is processed in accordance with applicable data protection laws\nand our internal privacy policies.\n\nBefore proceeding, please take a moment to review our Privacy Policy https://smbtravelph.com/privacy , which explains how and why we collect and manage your personal data. \n\nAnd by submitting this form, I agree to the outlined full terms and conditions of SMB Travel's Visa Assistance service below:",
+              "displayName": "We at SMB Travel and Tours are committed to protecting your personal data.\n\nYour privacy is important to us, and we ensure that all information you\nprovide is processed in accordance with applicable data protection laws\nand our internal privacy policies.\n\nBefore proceeding, please take a moment to review our Privacy Policy https://smbtravelph.com/privacy , which explains how and why we collect and manage your personal data. \n\nAnd by submitting this form, I agree to the outlined full terms and conditions of SMB Travel's Visa Assistance service below:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date of Birth",
+              "displayName": "Date of Birth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Place, Country of Birth",
+              "displayName": "Place, Country of Birth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Current Nationality",
+              "displayName": "Current Nationality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Do you hold or have you held any other Nationality?",
+              "displayName": "Do you hold or have you held any other Nationality?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "If you answered YES on the question above, provide what Nationality.  If NO, put N/A",
+              "displayName": "If you answered YES on the question above, provide what Nationality.  If NO, put N/A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Marital Status",
+              "displayName": "Marital Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Personal Mobile Number",
+              "displayName": "Personal Mobile Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Complete Address",
+              "displayName": "Complete Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Passport Number",
+              "displayName": "Passport Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Issuance Date",
+              "displayName": "Issuance Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Expiry Date",
+              "displayName": "Expiry Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Issuing Authority",
+              "displayName": "Issuing Authority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Current Status",
+              "displayName": "Current Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Job Title/Position:",
+              "displayName": "Job Title/Position:",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name of Employer",
+              "displayName": "Name of Employer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Employer's Complete Address",
+              "displayName": "Employer's Complete Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Employment's Start Date",
+              "displayName": "Employment's Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Employer's Contact Number",
+              "displayName": "Employer's Contact Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Employer's Email Address",
+              "displayName": "Employer's Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Activity as Source of Income",
+              "displayName": "Activity as Source of Income",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Activity's Start Date",
+              "displayName": "Activity's Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Business/Company Name",
+              "displayName": "Business/Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Business/Company's Complete Address",
+              "displayName": "Business/Company's Complete Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Business/Company's Start Date",
+              "displayName": "Business/Company's Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Can you provide complete business documents?",
+              "displayName": "Can you provide complete business documents?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "If you answered NO in the question above, please provide an explanation\n\nIf you answered YES, put N/A",
+              "displayName": "If you answered NO in the question above, please provide an explanation\n\nIf you answered YES, put N/A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name of School",
+              "displayName": "Name of School",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "School Contact Number",
+              "displayName": "School Contact Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "School's Complete Address",
+              "displayName": "School's Complete Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Who will pay for the trip?",
+              "displayName": "Who will pay for the trip?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Applicant's Monthly Income?",
+              "displayName": "How much is the Applicant's Monthly Income?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "displayName": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "displayName": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Applicant's Monthly Income?",
+              "displayName": "How much is the Applicant's Monthly Income?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "displayName": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "displayName": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How much is Applicant's Monthly Income?",
+              "displayName": "How much is Applicant's Monthly Income?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "displayName": "How much is the Applicant's bank balance with Savings or Current Account?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "displayName": "How much is the Applicant's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How much is Sponsor's Monthly Income?",
+              "displayName": "How much is Sponsor's Monthly Income?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "What does the Sponsor's Source of Income?",
+              "displayName": "What does the Sponsor's Source of Income?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "What is the Relationship of the Sponsor to the Applicant?",
+              "displayName": "What is the Relationship of the Sponsor to the Applicant?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Sponsor's bank balance with Savings/Current Account?",
+              "displayName": "How much is the Sponsor's bank balance with Savings/Current Account?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "How much is the Sponsor's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "displayName": "How much is the Sponsor's Average Daily Balance of the Savings/Current Bank Account for the past 6 months?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Purpose of Travel",
+              "displayName": "Purpose of Travel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Which Schengen Countries are you going to visit?",
+              "displayName": "Which Schengen Countries are you going to visit?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Arrival Date in Schengen",
+              "displayName": "Arrival Date in Schengen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Departure Date from Schengen",
+              "displayName": "Departure Date from Schengen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Did you avail a Tour Package with SMB Travel?",
+              "displayName": "Did you avail a Tour Package with SMB Travel?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "If you answered YES on the above question, please provide the Package Name and if you answered NO, put N/A",
+              "displayName": "If you answered YES on the above question, please provide the Package Name and if you answered NO, put N/A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "If you answered YES on the above question, please provide the name of your Travel Specialist and if you answered NO, put N/A",
+              "displayName": "If you answered YES on the above question, please provide the name of your Travel Specialist and if you answered NO, put N/A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Are you travelling as a group?",
+              "displayName": "Are you travelling as a group?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Companion 1: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "displayName": "Companion 1: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Companion 2: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "displayName": "Companion 2: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Companion 3: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "displayName": "Companion 3: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Companion 4: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "displayName": "Companion 4: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Companion 5: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "displayName": "Companion 5: Full Name / Gender / Date of Birth / Relationship to the Applicant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Have you previously traveled to Schengen within the past 5 years?",
+              "displayName": "Have you previously traveled to Schengen within the past 5 years?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Previous Schengen Visa Number with Schengen Country Code",
+              "displayName": "Previous Schengen Visa Number with Schengen Country Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Previous Biometric Date",
+              "displayName": "Previous Biometric Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Have you traveled internationally in the past 10 years?",
+              "displayName": "Have you traveled internationally in the past 10 years?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 1",
+              "displayName": "Country 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 2",
+              "displayName": "Country 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 3",
+              "displayName": "Country 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 4",
+              "displayName": "Country 4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 5",
+              "displayName": "Country 5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 6",
+              "displayName": "Country 6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 7",
+              "displayName": "Country 7",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 8",
+              "displayName": "Country 8",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 9",
+              "displayName": "Country 9",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Country 10",
+              "displayName": "Country 10",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -160,
+        -560
+      ],
+      "id": "0dbf9c89-daf5-4d42-97e6-0f81493e87dc",
+      "name": "Update Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "euoU2VlvEQwYZqXq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Alexa, a trusted and experienced visa consultant from SMB Travel and Tours. You specialize in assisting clients with tourist visa applications for various countries. Your role is to review and assess each applicant's profile based only on the structured data provided.\n\nThe data includes the applicant’s personal information, employment details, financial status, and travel history. Your goal is to provide a concise, professional, and easy-to-read assessment that helps the applicant prepare a stronger visa application.\n\nOutput Instructions:\n1. Respond with HTML only — no markdown, no code blocks, no triple backticks.\n2. The HTML must be complete, with <html>, <head>, and <body> tags, ready to use as an email body.\n3. Use clear headings (<h1>, <h2>) and paragraphs (<p>) for readability.\n4. Use bullet points for the assessment and recommendations.\n5. The tone should be:\n- Honest, supportive, and conversational — like speaking directly to the applicant\n- Professional but simple — avoid jargon or robotic wording\n- Realistic — never guarantee outcomes or approval\n- Encouraging — highlight strengths while politely noting concerns\n6. Do not invent or assume information. Only use what is explicitly provided. If data is missing, write “Not specified.”\n7. Always include a polite reminder that this assessment is advisory and does not guarantee visa approval.\n\nNow assess the applicant using the data below:\nApplicant Name:  {{ $json.firstName }} {{ $json.lastName }}\nEmail: {{ $json.emailAddress }}\nEmployment: {{ $json.jobTitle|| \"Not specified\" }} at {{ $json.employerName || \"Not specified\" }}\nEmployment Start Date: {{ $json.employmentStartDate || \"Not specified\" }}\nMonthly Salary: {{ $json.monthlyIncome || \"Not specified\" }}\nBank Average Balance (Last 6 Months): ₱ {{ $json.avgDailyBalance || \"Not specified\" }}\nCurrent Bank Balance: ₱{{ $json.bankBalance || \"Not specified\" }}\nPrevious Travels:\n{{ $json.traveledCountries?.length ? $json.traveledCountries.map(c => \"- \" + c).join(\"<br>\") : \"Not specified\" }}\n\nAssessment Summary:\n1. Briefly evaluate applicant’s financial status, employment/economic ties, and travel history.\n2. Keep it short, professional, and in bullet points only.\n\nImportant Note:\n- This assessment is based solely on the information provided.\n- It is for guidance only and does not guarantee visa approval; final decisions rest with the embassy.\n\nNext Step for Applicant:\n1. Confirm if you wish to proceed with the visa application so we can send your billing statement.\n2. For any other questions or clarifications, feel free to reach out anytime.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        -448
+      ],
+      "id": "592fd3bc-2603-4bfb-b173-f2593fcd0e9d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Extract Information').item.json.emailAddress }}",
+        "subject": "Visa Assessment",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -352
+      ],
+      "id": "807acc14-b7d4-4313-91b9-b645b2950967",
+      "name": "Send Email",
+      "webhookId": "8c8b81d1-4d5d-48fc-a5d8-8c2b452e523a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mXEy10xeKtJy5fSX",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "57e43ca5-82d0-4760-9cb5-afa62b8a330d",
+              "leftValue": "={{ $json.STATUS }}",
+              "rightValue": "NEW",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1040,
+        0
+      ],
+      "id": "5966fad9-a307-413e-af84-f8b2f23e3884",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        160
+      ],
+      "id": "c5ba7d0b-5304-4351-ac03-87e900532bca",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "Use to convert HTML file to Docx",
+        "height": 208,
+        "width": 480,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1264,
+        -1152
+      ],
+      "typeVersion": 1,
+      "id": "13bb679b-59f1-4d7c-8670-67423f35bc8b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Use HTML file to PDF Converter",
+        "height": 208,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1264,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "0abbc3fe-22d7-4167-80ea-0607b0c77350",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Extract Information then Provide Assessment",
+        "height": 448,
+        "width": 832,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -784,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "40e8d05f-4afb-431b-a5a0-ec9d3d4f48b2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Convert GoogleSheet Data into PDF File",
+        "height": 192,
+        "width": 832,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -784,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "a5842a9a-c4de-49d7-90f0-e6521cde8109",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Document": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Information": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract Information",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "10f0e595-73da-476b-8880-79820db22fe4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec7e42c4f361972a8c80ab3ebd270266122f96d9ebf1a7569610656255d73898"
+  },
+  "id": "iWhKOyoiwVsObF69",
+  "tags": []
+}

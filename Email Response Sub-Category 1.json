@@ -1,0 +1,557 @@
+{
+  "name": "Sub-Category 1",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Trigger').item.json.emailBody }}",
+        "options": {
+          "systemMessage": "=You are Alexa, a professional visa consultant from SMB Travel and Tours, specializing in tourist visa applications for various countries. Your task is to guide the clients from initial inquiry until the submission of the visa — ensuring they feel confident, supported, and well-informed every step of the way.\n\nBelow is the content extracted from a PDF file about visa requirements for {{ $('Trigger').item.json.visaCountry }}:\n{{ $json.text }}\n\nPlease perform the following:\n- Using the extracted text, generate a static and structured email response in HTML format following the structure below.\n- The output must be valid HTML without ```html or code block formatting.\n- Replace placeholders with the correct details from the extracted text.\n- Ensure proper HTML email styling with readable fonts, clear spacing, and bullet points.\n\nHTML Email Structure:\n\n<html> <body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\"> <p><strong>Subject:</strong> Tourist Visa Assistance for {{ $('Trigger').item.json.visaCountry }} </p>\n\n<p>Dear,</p>\n\n<p>Thank you for reaching out to <strong>SMB Travel and Tours</strong> regarding your interest in applying for a tourist visa to <strong>{{ $('Trigger').item.json.visaCountry }}</strong>. I'm Alexa, your dedicated visa consultant, and I’d be happy to assist you with the process.</p>\n\n<p>Based on our official visa assistance guidelines, here’s a summary of the visa process for <strong>{{ $('Trigger').item.json.visaCountry }}</strong>:</p>\n\n<h3 style=\"margin-bottom: 4px;\">1. Visa Requirements</h3>\n<ul>\n  <li>[Summarize and list the visa requirements here based on extracted PDF]</li>\n</ul>\n\n<h3 style=\"margin-bottom: 4px;\">2. Visa Processing Fee</h3>\n<ul>\n  <li>Visa Assistance Fee: [Extracted Fee]</li>\n  <li>Other Costs (if any): [Mention from PDF if applicable]</li>\n</ul>\n\n<h3 style=\"margin-bottom: 4px;\">3. Estimated Processing Time</h3>\n<ul>\n  <li>Standard Processing Time: [Extracted Duration from PDF]</li>\n</ul>\n<p><em>Note: Embassy timelines may vary depending on season or volume of applications.</em></p>\n\n<h3 style=\"margin-bottom: 4px;\">Application Process</h3>\n<ol>\n  <li>Download and complete our visa questionnaire form for a free assessment via our website: <a href=\"https://bit.ly/smbvisa\">https://bit.ly/smbvisa</a></li>\n  <li>Submit the questionnaire form and wait for our initial feedback.</li>\n  <li>If eligible, settle the processing fee and start gathering the required documents.</li>\n  <li>Our team will guide you through each step until submission to the embassy.</li>\n</ol>\n\n<p>If you have any questions or would like to proceed, feel free to reply to this email. We’re here to assist you every step of the way.</p>\n\n<p>Looking forward to helping you start your journey!</p>\n\n<p>Warm regards,<br>\nAlexa<br>\nSMB Travel Visa Assistance Team</p>\n</body> </html>\n\nTone & Style Rules:\n- Friendly and professional\n- Avoid robotic or overly formal language\n- Use simple, clear terms (no legal jargon)\n- No social media links\n- No extra promotional content"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "7993f73d-73a8-43c9-aa0d-071134a102a3",
+      "name": "Visa Support Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        192
+      ],
+      "id": "d98e8a41-42c9-4c01-b7bd-30c791e63168",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QuFQGsPklRzSZqzF",
+          "name": "OpenAI SMB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.visaCountry }}",
+                    "rightValue": "Australia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1e7438fa-fae6-43b3-a933-d0b78b0b9c45"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1ca47384-dfd9-4812-9962-257534f2dfd8",
+                    "leftValue": "={{ $json.visaCountry }}",
+                    "rightValue": "UK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c6f07aef-67d9-4a11-9f3a-4790496ef092",
+                    "leftValue": "={{ $json.visaCountry }}",
+                    "rightValue": "New Zealand",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "faa69bc9-202d-4546-a925-bea0f1226bbf",
+                    "leftValue": "={{ $json.visaCountry }}",
+                    "rightValue": "Schengen",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        -112
+      ],
+      "id": "6d33e16e-2196-4306-be45-5a9b7d2ffe1b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1RMh6p0sct1YMddDybb5xSL4-fQKbU6cU",
+          "mode": "list",
+          "cachedResultName": "Australia Visa Assistance_SMB Travel.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1RMh6p0sct1YMddDybb5xSL4-fQKbU6cU/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        -304
+      ],
+      "id": "04becf20-bc12-47b2-a490-7744fe3fdb11",
+      "name": "Australia",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1trj4WYU465PmBwj1Of6ZeLgrQ3BeigWY",
+          "mode": "list",
+          "cachedResultName": "UK Visa Assistance_SMB Travel.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1trj4WYU465PmBwj1Of6ZeLgrQ3BeigWY/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        -144
+      ],
+      "id": "fa48bc0e-8fbb-4e1d-97d7-268db1374793",
+      "name": "UK",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1bIlY5r0KFAvh0Adb4VqSZqrR8IlyP_NL",
+          "mode": "list",
+          "cachedResultName": "New Zealand E-Visa Assistance_SMB Travel.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1bIlY5r0KFAvh0Adb4VqSZqrR8IlyP_NL/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "2540a200-8d99-4daa-987f-64f10a7dd0fd",
+      "name": "New Zealand",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "18UK5cewBtBGRPmi-kqxuP8sJuh9_0UFP",
+          "mode": "list",
+          "cachedResultName": "Schengen Visa Assistance_SMB Travel.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/18UK5cewBtBGRPmi-kqxuP8sJuh9_0UFP/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        176
+      ],
+      "id": "9d07c596-60b0-4150-bace-982a3eb6b9a5",
+      "name": "Schengen",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mOQsYkavDDdBAlV8",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "reply",
+        "threadId": "={{ $('Trigger').item.json.threadID }}",
+        "messageId": "={{ $('Trigger').item.json.threadID }}",
+        "emailType": "html",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        -80
+      ],
+      "id": "27882368-d265-4354-a282-2e7a30fc0552",
+      "name": "Reply to a message",
+      "webhookId": "3692373a-2426-466c-af00-277b428695ac",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mXEy10xeKtJy5fSX",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        -80
+      ],
+      "id": "7884e257-739c-4d50-a8d1-2038a9853297",
+      "name": "Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Trigger').item.json.threadID }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        -80
+      ],
+      "id": "8b55901f-990e-4b0f-be96-b235d2c04f9c",
+      "name": "Mark a message as read",
+      "webhookId": "c5cee2ab-d011-4f50-b932-0e4f24b92711",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mXEy10xeKtJy5fSX",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -304
+      ],
+      "id": "5fdc215c-4119-4376-a76d-cfa391fe1f61",
+      "name": "Extract PDF File 1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -144
+      ],
+      "id": "80f28e17-bca5-4052-a81d-97d85571a861",
+      "name": "Extract PDF File 2"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "2f8eaa19-fc49-43fe-ba9e-237348a27b91",
+      "name": "Extract PDF File 3"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        176
+      ],
+      "id": "02c2e336-679e-4293-985d-6c2d10c687ba",
+      "name": "Extract PDF File 4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Visa Support Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visa Support Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Australia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "New Zealand",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Schengen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Australia": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF File 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UK": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF File 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Zealand": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF File 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schengen": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF File 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        [
+          {
+            "node": "Mark a message as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF File 1": {
+      "main": [
+        [
+          {
+            "node": "Visa Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF File 2": {
+      "main": [
+        [
+          {
+            "node": "Visa Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF File 3": {
+      "main": [
+        [
+          {
+            "node": "Visa Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF File 4": {
+      "main": [
+        [
+          {
+            "node": "Visa Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1d5b20be-f869-4250-8045-e8579d1a2127",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec7e42c4f361972a8c80ab3ebd270266122f96d9ebf1a7569610656255d73898"
+  },
+  "id": "KB8UaT5vnb1PuDZ9",
+  "tags": []
+}

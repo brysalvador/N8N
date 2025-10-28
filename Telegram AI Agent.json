@@ -1,0 +1,564 @@
+{
+  "name": "Telegram AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        128
+      ],
+      "id": "c7f2f0f5-8b6e-48de-b28c-25eaceb9c447",
+      "name": "Telegram Agent",
+      "webhookId": "531a159a-0f07-4df3-be10-1c4231d1c196",
+      "credentials": {
+        "telegramApi": {
+          "id": "71nU1h80MFl49uOR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "c349805c-a865-4c0f-ab74-3ab7e3b25963"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "photo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "38319d11-7a0d-4bee-9e3a-70cf1f5d2d83",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9b49a878-6203-4246-8a30-933c53c513bd",
+                    "leftValue": "={{ $json.message.document }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1072,
+        112
+      ],
+      "id": "3d5ebc45-5575-4924-b205-fb6a6ecbfc4e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        -16
+      ],
+      "id": "e5b8cb4e-5aa4-41a0-8e23-cf1d05e78c0c",
+      "name": "Download Photo",
+      "webhookId": "014f6e3f-8c89-4f8d-9651-ba760cc209ad",
+      "credentials": {
+        "telegramApi": {
+          "id": "71nU1h80MFl49uOR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Agent').item.json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        256
+      ],
+      "id": "126805c0-98c3-4d7b-a8d5-2ebcec94fbf1",
+      "name": "Download PDF",
+      "webhookId": "c2b6c342-b3bf-4a0f-b47a-dbdb83e2c1b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "71nU1h80MFl49uOR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Please pull out all the text from the image",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -496,
+        -16
+      ],
+      "id": "f8022eab-fbb4-4dc4-98e0-5214d9b1796f",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "QuFQGsPklRzSZqzF",
+          "name": "OpenAI SMB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are Alexa, an AI that extracts structured data from receipts.\n\nAnalyze the text below and return exactly one JSON object (raw JSON, not a string). Do NOT escape newlines or wrap the JSON in quotes. Return no text, no markdown, no code fences, no role labels.\n\nSchema (return exact keys; use empty strings \"\" when missing):\n{\n  \"DateOfPurchase\": \"\",\n  \"Currency\": \"\",\n  \"Amount\": \"\",\n  \"ItemDescription\": \"\",\n  \"BriefDetails\": \"\",\n  \"Confidence\": \"\",\n  \"Message\": \"\"\n}\n\nNotes:\n- DateOfPurchase: YYYY-MM-DD if possible, else \"\".\n- Currency: 3-letter code (e.g., PHP, USD, SGD, JPY), else \"\".\n- Amount: numeric string or number (two decimals), else \"\".\n- Confidence: integer 0–100 (no % sign).\n- Brief Details: provide informative information regarding the purchase items.\n- Message: one short confirmation sentence like confirmation if data is successfully saved or informed the user if there are errors.\n\nReceipt text:\n{{ $json[\"content\"] }} || {{ $json[\"text\"] }} || {{ $json.message.text }}\n",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -240,
+        128
+      ],
+      "id": "53b883d0-8384-4029-a958-a75c3f03866b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QuFQGsPklRzSZqzF",
+          "name": "OpenAI SMB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13bZ8-OVUXch0hTrdYUjnLzYzM77TRpCP9qrnitx30jg",
+          "mode": "list",
+          "cachedResultName": "AI Accounting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13bZ8-OVUXch0hTrdYUjnLzYzM77TRpCP9qrnitx30jg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13bZ8-OVUXch0hTrdYUjnLzYzM77TRpCP9qrnitx30jg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date of Purchase": "={{ $json.DateOfPurchase }}",
+            "Currency": "={{ $json.Currency }}",
+            "Amount": "={{ $json.Amount }}",
+            "Item Description": "={{ $json.ItemDescription }}",
+            "Brief Details": "={{ $json.BriefDetails }}",
+            "Confidence": "={{ $json.Confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date of Purchase",
+              "displayName": "Date of Purchase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Currency",
+              "displayName": "Currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Item Description",
+              "displayName": "Item Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Brief Details",
+              "displayName": "Brief Details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Note",
+              "displayName": "Note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        128
+      ],
+      "id": "6e3ffeb3-14af-458e-8e43-1e1839815d02",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "euoU2VlvEQwYZqXq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Agent').item.json.message.chat.id }}",
+        "text": "={{ $json.Message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        128
+      ],
+      "id": "9061c19f-5a22-43ae-9542-1eacae34cff8",
+      "name": "Send Reply",
+      "webhookId": "bf67be34-2bc6-483d-a56f-0d85f8e8faab",
+      "credentials": {
+        "telegramApi": {
+          "id": "71nU1h80MFl49uOR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node: Parse AI output reliably into individual fields for Google Sheets.\n// It looks for a JSON-like string anywhere in the node output (message.content or content),\n// unescapes it if needed, JSON.parse it, normalize some fields, and return as top-level json.\n\nfunction tryParseRawJsonString(str) {\n  if (typeof str !== 'string') return null;\n  // Common patterns: starts with \"{\", or starts with \"{\\n\", or contains \"DateOfPurchase\"\n  const looksLikeJson = str.trim().startsWith('{') || str.includes('\"DateOfPurchase\"') || str.includes('DateOfPurchase');\n  if (!looksLikeJson) return null;\n  // Remove wrapping quotes if present\n  if ((str.startsWith('\"') && str.endsWith('\"')) || (str.startsWith(\"'\") && str.endsWith(\"'\"))) {\n    str = str.slice(1, -1);\n  }\n  // Unescape common sequences\n  // Replace \\\" with \" and remove \\n and \\t sequences while preserving JSON structure\n  str = str.replace(/\\\\\"/g, '\"').replace(/\\\\n/g, '').replace(/\\\\t/g, '').replace(/\\\\r/g, '');\n  // Trim spaces\n  str = str.trim();\n  // Try to parse\n  try {\n    return JSON.parse(str);\n  } catch (e) {\n    // Fallback: try to fix trailing commas or smart-quote issues\n    try {\n      // remove trailing commas before } or ]\n      const cleaned = str.replace(/,(\\s*[}\\]])/g, '$1');\n      return JSON.parse(cleaned);\n    } catch (e2) {\n      return null;\n    }\n  }\n}\n\n// Helper: normalize date patterns like MM/DD/YYYY -> YYYY-MM-DD\nfunction normalizeDate(s) {\n  if (!s || typeof s !== 'string') return \"\";\n  s = s.trim();\n  // If already YYYY-MM-DD\n  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;\n  // Try MM/DD/YYYY or M/D/YYYY\n  const m1 = s.match(/^(\\d{1,2})[\\/\\-](\\d{1,2})[\\/\\-](\\d{2,4})$/);\n  if (m1) {\n    let mm = m1[1].padStart(2,'0');\n    let dd = m1[2].padStart(2,'0');\n    let yyyy = m1[3].length === 2 ? ('20' + m1[3]) : m1[3];\n    return `${yyyy}-${mm}-${dd}`;\n  }\n  // Try DD/MM/YYYY\n  const d1 = s.match(/^(\\d{1,2})[\\/\\-](\\d{1,2})[\\/\\-](\\d{4})$/);\n  if (d1) {\n    // ambiguous; assume day/month/year -> convert to YYYY-MM-DD\n    let dd = d1[1].padStart(2,'0');\n    let mm = d1[2].padStart(2,'0');\n    let yyyy = d1[3];\n    return `${yyyy}-${mm}-${dd}`;\n  }\n  return s; // give raw string as last resort\n}\n\nconst out = [];\n\n// iterate items in case multiple\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i].json;\n  let candidate = null;\n\n  // Common locations where OpenAI content appears\n  // 1) item.message.content (as in screenshot)\n  // 2) item.content\n  // 3) item.text or item.data\n  if (item && item.message && item.message.content) candidate = item.message.content;\n  if (!candidate && item && item.content) candidate = item.content;\n  if (!candidate && item && item.text) candidate = item.text;\n  if (!candidate && item && item.data) candidate = item.data;\n\n  let parsed = null;\n\n  // If candidate already is object (n8n sometimes parsed it)\n  if (candidate && typeof candidate === 'object') parsed = candidate;\n  // If candidate is string, try to parse\n  if (!parsed && typeof candidate === 'string') {\n    parsed = tryParseRawJsonString(candidate);\n  }\n\n  // As a fallback, if the whole item could be the parsed JSON\n  if (!parsed) {\n    // search through all values for a string that looks like JSON\n    const jsonValues = Object.values(item).filter(v => typeof v === 'string');\n    for (const v of jsonValues) {\n      if (v.includes('\"DateOfPurchase\"') || v.includes('DateOfPurchase')) {\n        parsed = tryParseRawJsonString(v);\n        if (parsed) break;\n      }\n    }\n  }\n\n  // If still nothing, return an error-shaped object for debugging\n  if (!parsed) {\n    out.push({ json: {\n      DateOfPurchase: \"\",\n      Currency: \"\",\n      Amount: \"\",\n      ItemDescription: \"\",\n      BriefDetails: \"\",\n      Confidence: \"\",\n      Message: \"\",\n      _parse_error: \"Could not parse AI output; see raw fields\",\n      _raw_item: item\n    }});\n    continue;\n  }\n\n  // Normalize parsed fields, ensure all keys exist\n  const result = {\n    DateOfPurchase: parsed.DateOfPurchase ? normalizeDate(String(parsed.DateOfPurchase)) : \"\",\n    Currency: parsed.Currency ? String(parsed.Currency) : \"\",\n    Amount: parsed.Amount ? (typeof parsed.Amount === 'number' ? parsed.Amount.toFixed(2) : String(parsed.Amount)) : \"\",\n    ItemDescription: parsed.ItemDescription ? String(parsed.ItemDescription) : \"\",\n    BriefDetails: parsed.BriefDetails ? String(parsed.BriefDetails) : \"\",\n    Confidence: parsed.Confidence !== undefined ? String(parsed.Confidence) : \"\",\n    Message: parsed.Message ? String(parsed.Message) : \"\"\n  };\n\n  // Ensure numeric formatting for amount (optional)\n  if (result.Amount !== \"\") {\n    // remove non-numeric except dot and minus\n    const cleanedAmt = String(result.Amount).replace(/[^0-9.\\-]/g, '');\n    if (cleanedAmt !== \"\") {\n      const num = Number(cleanedAmt);\n      if (!isNaN(num)) result.Amount = num.toFixed(2);\n    }\n  }\n\n  // Ensure Confidence is integer 0-100\n  if (result.Confidence !== \"\") {\n    const numC = parseInt(String(result.Confidence).replace(/[^0-9]/g,''), 10);\n    if (!isNaN(numC)) {\n      result.Confidence = Math.max(0, Math.min(100, numC)).toString();\n    }\n  }\n\n  out.push({ json: result });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        128
+      ],
+      "id": "606d4e51-a5cc-42c9-9ed2-97a5ca1d6349",
+      "name": "Result Parser"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        256
+      ],
+      "id": "f12e16da-19f6-420a-8c19-fbcf9749e85d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// input: Telegram Trigger node\nconst msg = items[0].json.message || {};\nif (!msg.photo) throw new Error(\"No photo found\");\n\nconst photos = msg.photo;\nconst best = photos[photos.length - 1]; // last is highest resolution\nconst file_id = best.file_id;\n\nreturn [{\n  json: {\n    file_id,\n    chat_id: msg.chat ? msg.chat.id : null,\n    from: msg.from || null,\n    original_name: null,\n    mime: 'image',\n    language_hint: 'eng' // change if you want a different OCR language\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        -16
+      ],
+      "id": "bf96dbb7-9a68-4fb8-8679-b3659ba160b2",
+      "name": "Retrieve Image File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const doc = items[0].json.message.document;\nif (!doc) throw new Error(\"No document found\");\nreturn [{\n  json: {\n    file_id: doc.file_id,\n    file_name: doc.file_name,\n    mime: doc.mime_type || 'application/pdf',\n    chat_id: items[0].json.message.chat.id,\n    language_hint: 'eng'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        256
+      ],
+      "id": "4b26cfe0-26f9-4a2e-84e8-c88993cc90e4",
+      "name": "Retrieve PDF File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Image File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retrieve PDF File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Photo": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Result Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Result Parser": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Image File": {
+      "main": [
+        [
+          {
+            "node": "Download Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve PDF File": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1770c0df-3ede-4f89-9222-55eac3bcc4ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ec7e42c4f361972a8c80ab3ebd270266122f96d9ebf1a7569610656255d73898"
+  },
+  "id": "oTgSIjGFrLyiPbp4",
+  "tags": []
+}
